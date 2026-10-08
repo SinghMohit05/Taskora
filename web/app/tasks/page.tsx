@@ -432,3 +432,4 @@ export default function TasksPage() {
     </AppShell>
   );
 }
+export const dynamic = 'force-dynamic';

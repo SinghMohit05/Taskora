@@ -1,0 +1,42 @@
+{
+  "name": "taskforge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TaskForge Project Management System Monorepo",
+  "workspaces": [
+    "shared",
+    "backend",
+    "web",
+    "mobile"
+  ],
+  "scripts": {
+    "build:shared": "npm run --workspace=shared build",
+    "dev:backend": "npm run --workspace=backend dev",
+    "build:backend": "npm run --workspace=backend build",
+    "dev:web": "npm run --workspace=web dev",
+    "start:mobile": "npm run --workspace=mobile start",
+    "tunnel:mobile": "npm run --workspace=mobile tunnel",
+    "prisma:generate": "npm run --workspace=backend prisma:generate",
+    "prisma:migrate": "npm run --workspace=backend prisma:migrate",
+    "prisma:seed": "npm run --workspace=backend prisma:seed",
+    "test:sync": "node scripts/verify-sync.js",
+    "build:all": "npm run build:shared && npm run build:backend && npm run --workspace=web build && npm run --workspace=mobile check-types"
+  },
+  "keywords": [
+    "project-management",
+    "monorepo",
+    "express",
+    "react",
+    "expo",
+    "prisma",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@neon/env": "^1.5.1"
+  },
+  "devDependencies": {
+    "@neon/config": "^1.8.5"
+  }
+}

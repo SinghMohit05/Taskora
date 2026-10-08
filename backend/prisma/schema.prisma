@@ -1,0 +1,84 @@
+// TaskForge Prisma Schema
+// PostgreSQL Database Schema Definition
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectStatus {
+  NOT_STARTED @map("Not Started")
+  IN_PROGRESS @map("In Progress")
+  COMPLETED   @map("Completed")
+
+  @@map("project_status")
+}
+
+enum TaskPriority {
+  LOW    @map("Low")
+  MEDIUM @map("Medium")
+  HIGH   @map("High")
+
+  @@map("task_priority")
+}
+
+enum TaskStatus {
+  PENDING     @map("Pending")
+  IN_PROGRESS @map("In Progress")
+  COMPLETED   @map("Completed")
+
+  @@map("task_status")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  fullName     String    @map("full_name")
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  tokenVersion Int       @default(0) @map("token_version")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  projects     Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  ownerId     String        @map("owner_id")
+  name        String
+  description String?
+  status      ProjectStatus @default(NOT_STARTED)
+  startDate   DateTime?     @map("start_date")
+  endDate     DateTime?     @map("end_date")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  owner       User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@map("projects")
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  projectId   String       @map("project_id")
+  name        String
+  description String?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(PENDING)
+  dueDate     DateTime?    @map("due_date")
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+  @@index([priority])
+  @@map("tasks")
+}

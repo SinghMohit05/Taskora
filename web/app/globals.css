@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+:root {
+  --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  @apply bg-paper text-ink;
+  min-height: 100vh;
+}
+
+/* Premium smooth scrollbar styling */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-ash rounded-full;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted;
+}
+
+/* Focus ring utility */
+.focus-ring {
+  @apply outline-none ring-2 ring-ink/20 ring-offset-2 ring-offset-paper;
+}
+
+/* Executive Card & Component Styles matching reference */
+@layer components {
+  .card-premium {
+    @apply bg-[#121622] text-white rounded-2xl border border-white/[0.06] shadow-sm transition-all duration-200;
+  }
+
+  .card-premium:hover {
+    @apply border-white/[0.12];
+  }
+
+  /* High contrast executive buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl
+           bg-[#2563EB] text-white font-medium text-xs
+           hover:bg-blue-600 active:bg-blue-700
+           transition-all duration-200 ease-out
+           shadow-md shadow-blue-500/20 hover:-translate-y-0.5
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+  }
+
+  .btn-pill {
+    @apply inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full
+           bg-[#2563EB] text-white font-medium text-xs
+           hover:bg-blue-600 transition-all duration-200
+           shadow-sm hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl
+           bg-white/[0.04] text-zinc-300 font-medium text-xs border border-white/[0.08]
+           hover:bg-white/[0.08] hover:text-white
+           transition-all duration-200 ease-out
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl
+           text-zinc-400 font-medium text-xs
+           hover:bg-white/[0.06] hover:text-white
+           transition-all duration-200 ease-out;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl
+           bg-rose-600 text-white font-medium text-xs
+           hover:bg-rose-700
+           transition-all duration-200 ease-out
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-xl text-sm
+           bg-[#131824] border border-white/[0.08]
+           text-white placeholder:text-zinc-500
+           focus:outline-none focus:border-blue-500/60
+           transition-all duration-200;
+  }
+
+  .label-field {
+    @apply block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium tracking-tight;
+  }
+
+  /* Sleek sidebar navigation */
+  .sidebar-link {
+    @apply flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium
+           text-zinc-400 hover:text-white hover:bg-white/[0.07]
+           transition-all duration-200 ease-out;
+  }
+
+  .sidebar-link-active {
+    @apply bg-white/[0.12] text-white font-semibold;
+  }
+
+  /* Circular chart ring transition */
+  .donut-ring {
+    transform-origin: center;
+    transition: stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease;
+  }
+}
+
+/* Modal overlay */
+.modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm;
+  animation: fade-in 0.15s ease-out;
+}
+
+.modal-content {
+  @apply bg-card rounded-[24px] shadow-elevated border border-black/[0.06] w-full max-w-lg mx-4;
+  animation: scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Stagger animation delays */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }

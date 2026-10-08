@@ -62,7 +62,9 @@ function PriorityBadge({ priority }: { priority: string }) {
 const STATUS_FILTERS: (TaskStatus | 'all')[] = ['all', 'Pending', 'In Progress', 'Completed'];
 const PRIORITY_FILTERS: (TaskPriority | 'all')[] = ['all', 'High', 'Medium', 'Low'];
 
-export default function TasksPage() {
+import { Suspense } from 'react';
+
+function TasksContent() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   
@@ -430,6 +432,14 @@ export default function TasksPage() {
         />
       </div>
     </AppShell>
+  );
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0D14] flex items-center justify-center text-white">Loading tasks...</div>}>
+      <TasksContent />
+    </Suspense>
   );
 }
 export const dynamic = 'force-dynamic';

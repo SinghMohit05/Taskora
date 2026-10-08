@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: taskora-backend
+    env: node
+    rootDir: .
+    buildCommand: npm install && npm run build:shared && npm run build:backend && npm run prisma:generate
+    startCommand: npm run --workspace=backend start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        value: https://taskora.vercel.app

@@ -83,6 +83,11 @@ apiClient.interceptors.response.use(
     const { status, data } = error.response;
 
     // 2. 401 Unauthorized / TOKEN_EXPIRED
+    // INTERVIEW EXPLANATION: Global Error Interception
+    // Instead of checking for 401 errors on every single API call throughout the app,
+    // we use an Axios interceptor. If any request returns a 401, it is trapped here.
+    // We immediately delete the secure token and trigger 'onSessionExpiredCallback' 
+    // to force the navigation state back to the Login screen.
     if (status === 401) {
       if (!isHandlingExpiry) {
         isHandlingExpiry = true;

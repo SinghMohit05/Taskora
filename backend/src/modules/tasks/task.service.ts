@@ -17,7 +17,9 @@ export class TaskService {
   async getTasks(userId: string, query: TaskQueryInput) {
     const { projectId, status, priority, search, page, limit, sortBy, order } = query;
 
-    // Strict ownership scoping: all tasks must belong to projects owned by the authenticated user
+    // INTERVIEW EXPLANATION: Strict Data Isolation (Multi-Tenancy)
+    // We explicitly filter every query by the authenticated user's ID (`ownerId`). 
+    // This guarantees that a user can NEVER access or mutate tasks that belong to someone else.
     const where: Prisma.TaskWhereInput = {
       project: {
         ownerId: userId,

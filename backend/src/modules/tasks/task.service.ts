@@ -17,9 +17,8 @@ export class TaskService {
   async getTasks(userId: string, query: TaskQueryInput) {
     const { projectId, status, priority, search, page, limit, sortBy, order } = query;
 
-    // INTERVIEW EXPLANATION: Strict Data Isolation (Multi-Tenancy)
-    // We explicitly filter every query by the authenticated user's ID (`ownerId`). 
-    // This guarantees that a user can NEVER access or mutate tasks that belong to someone else.
+    // Strict multi-tenant data isolation:
+    // Every query must be scoped to the authenticated user's ID to prevent cross-tenant access.
     const where: Prisma.TaskWhereInput = {
       project: {
         ownerId: userId,

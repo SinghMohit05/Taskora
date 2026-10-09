@@ -50,9 +50,8 @@ export const authenticate = async (
       throw new AppError(401, 'UNAUTHORIZED', 'Invalid or malformed authentication token');
     }
 
-    // INTERVIEW EXPLANATION: Verify user exists and check tokenVersion for session revocation.
-    // By checking if the tokenVersion in the database matches the one in the JWT payload,
-    // we can instantly invalidate all active tokens when a user logs out or changes their password.
+    // Check if the token version in the DB matches the token payload.
+    // This allows us to easily revoke all active sessions if a user resets their password or logs out.
     const user = await prisma.user.findUnique({
       where: { id: payload.id },
       select: {

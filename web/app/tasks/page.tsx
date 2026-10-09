@@ -84,9 +84,7 @@ function TasksContent() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
 
-  // INTERVIEW EXPLANATION: Debouncing
-  // We debounce the search input by 300ms. This prevents firing a new API request 
-  // on every single keystroke, significantly reducing backend load and UI stuttering.
+  // Debounce the search input to avoid spamming the API and causing UI lag on every keystroke.
   const debouncedSearch = useDebounce(search, 300);
 
   const { data, isLoading } = useQuery({
@@ -104,10 +102,8 @@ function TasksContent() {
   const tasks = data?.data || [];
   const meta = data?.meta || { page: 1, limit: 15, total: 0, totalPages: 1 };
 
-  // INTERVIEW EXPLANATION: useMemo Optimization
-  // Expensive array filtering and calculations are wrapped in useMemo. 
-  // This ensures they only recalculate when the 'tasks' array actually changes, 
-  // preventing frame-drops during unrelated state changes (like opening a modal).
+  // Memoize these calculations so we don't drop frames recalculating charts
+  // when unrelated state changes (like toggling a modal).
   const metrics = useMemo(() => {
     const totalCount = meta.total || tasks.length;
     const completedCount = tasks.filter((t) => t.status === 'Completed').length;
@@ -141,10 +137,8 @@ function TasksContent() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTaskInput }) => tasksApi.update(id, data),
     
-    // INTERVIEW EXPLANATION: Optimistic UI Updates
-    // When a task is toggled, we immediately update the local React Query cache (onMutate)
-    // BEFORE the server responds. This makes the UI feel instantly responsive. 
-    // If the API request fails, we roll back to 'previousTasks' in onError.
+    // Optimistic UI update: instantly apply the task status toggle locally
+    // before the server responds to make the interaction feel immediate.
     onMutate: async ({ id, data }) => {
       const queryKey = ['tasks', debouncedSearch, statusFilter, priorityFilter, page];
       await queryClient.cancelQueries({ queryKey });

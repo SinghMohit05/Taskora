@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import AppShell from '@/components/app-shell';
@@ -76,11 +76,30 @@ export default function DashboardPage() {
   const toggleTaskMutation = useMutation({
     mutationFn: ({ id, completed }: { id: string; completed: boolean }) =>
       tasksApi.update(id, { status: completed ? 'Completed' : 'Pending' }),
-    onSuccess: () => {
+    onMutate: async ({ id, completed }) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks', 'all'] });
+      const previousTasks = queryClient.getQueryData(['tasks', 'all']);
+      queryClient.setQueryData(['tasks', 'all'], (old: any) => {
+        if (!old || !old.data) return old;
+        return {
+          ...old,
+          data: old.data.map((t: any) =>
+            t.id === id ? { ...t, status: completed ? 'Completed' : 'Pending' } : t
+          ),
+        };
+      });
+      return { previousTasks };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks', 'all'], context.previousTasks);
+      }
+      toast.error('Failed to update task status');
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast.success('Task status updated');
     },
   });
 
@@ -96,22 +115,24 @@ export default function DashboardPage() {
   const allTasks = tasksData?.data || [];
 
   // Sort tasks intelligently: pending/in-progress first (by upcoming dueDate), then completed
-  const sortedTasks = [...allTasks].sort((a, b) => {
-    if (a.status === 'Completed' && b.status !== 'Completed') return 1;
-    if (a.status !== 'Completed' && b.status === 'Completed') return -1;
-    if (a.dueDate && b.dueDate) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-    if (a.dueDate) return -1;
-    if (b.dueDate) return 1;
-    return 0;
-  });
-  const upcomingTasks = sortedTasks.slice(0, 5);
+  const upcomingTasks = useMemo(() => {
+    const sortedTasks = [...allTasks].sort((a, b) => {
+      if (a.status === 'Completed' && b.status !== 'Completed') return 1;
+      if (a.status !== 'Completed' && b.status === 'Completed') return -1;
+      if (a.dueDate && b.dueDate) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return 0;
+    });
+    return sortedTasks.slice(0, 5);
+  }, [allTasks]);
 
-  const recentProjects = allProjects.slice(0, 5);
+  const recentProjects = useMemo(() => allProjects.slice(0, 5), [allProjects]);
 
   // Dynamic rates
   const completionRate = m.totalTasks > 0 ? Math.round((m.completedTasks / m.totalTasks) * 100) : 0;
   const pendingRate = m.totalTasks > 0 ? Math.round((m.pendingTasks / m.totalTasks) * 100) : 0;
-  const highPriorityCount = allTasks.filter((t) => t.priority === 'High').length;
+  const highPriorityCount = useMemo(() => allTasks.filter((t) => t.priority === 'High').length, [allTasks]);
 
   // User Greeting & Date
   const userName = sessionData?.user?.fullName || 'User';

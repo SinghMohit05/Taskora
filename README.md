@@ -1,4 +1,4 @@
-# TaskForge — Cross-Platform Project Management System
+# Taskora — Cross-Platform Project Management System
 
 [![Node.js](https://img.shields.io/badge/Node.js-20.x_LTS-green.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
@@ -8,7 +8,7 @@
 [![Prisma](https://img.shields.io/badge/Prisma-5.20-1B222D.svg)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791.svg)](https://www.postgresql.org/)
 
-**TaskForge** is a production-grade, multi-tenant project management platform featuring a centralized Express REST API, a responsive Next.js 14 Web client, and a native React Native (Expo) mobile client. It enforces strict cross-tenant data isolation, hardware-backed mobile token storage, rate-limited authentication, and bidirectional real-time synchronization between desktop and mobile devices.
+**Taskora** is a production-grade, multi-tenant project management platform featuring a centralized Express REST API, a responsive Next.js 14 Web client, and a native React Native (Expo) mobile client. It enforces strict cross-tenant data isolation, hardware-backed mobile token storage, rate-limited authentication, and bidirectional real-time synchronization between desktop and mobile devices.
 
 ---
 
@@ -212,8 +212,8 @@ npm run prisma:seed
 ```
 
 > **Default Seed Accounts**:
-> - Admin: `alex@taskforge.io` / `Password123!`
-> - Manager: `sarah@taskforge.io` / `Password123!`
+> - Admin: `alex@taskora.io` / `Password123!`
+> - Manager: `sarah@taskora.io` / `Password123!`
 
 #### Step 5: Start the Services
 Run each service in separate terminal windows:
@@ -258,26 +258,15 @@ npm run build:all
 
 ---
 
-## Demonstration Script (for Screen Recording)
+## Download Android App
 
-1. **Authentication**:
-   - Open Web (`http://localhost:3000/login`) and Mobile app side-by-side.
-   - Log into both devices using `alex@taskforge.io` / `Password123!`.
-2. **Web Creation**:
-   - On Web, navigate to **Projects** and create a project: *"Mobile App Launch"*.
-   - Add a task: *"Configure push notifications"* with priority *"High"*.
-3. **Mobile Pull-to-Refresh**:
-   - On Mobile, perform a **pull-to-refresh** gesture on the Dashboard / Projects screen.
-   - Verify that *"Mobile App Launch"* and its task appear instantly.
-4. **Mobile Status Update**:
-   - Tap the task on Mobile and toggle it to **Completed**.
-5. **Web Synchronization**:
-   - Refresh or view the Web Dashboard: observe the completed task count incremented by 1 and status updated.
-6. **Security & Offline Edge Cases**:
-   - Toggle Airplane mode on Mobile: verify the sticky red *"No Internet Connection"* banner appears.
-   - Log out on Web: verify session termination and token invalidation.
+You can download the latest Android APK for Taskora directly using the link below:
+
+🔗 **[Download Taskora APK](https://expo.dev/accounts/singhmohit05/projects/taskora/builds)**
+
+*(Note: Ensure that your device is allowed to install apps from unknown sources if downloading the APK directly).*
 
 ---
 
 ## License
-MIT © 2026 TaskForge Team
+MIT © 2026 Taskora Team

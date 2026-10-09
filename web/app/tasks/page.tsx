@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AppShell from '@/components/app-shell';
+import { useDebounce } from '@/hooks/use-debounce';
 import TaskModal from '@/components/modals/task-modal';
 import ConfirmModal from '@/components/modals/confirm-modal';
 import { tasksApi, projectsApi } from '@/lib/api';
@@ -83,11 +84,13 @@ function TasksContent() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
 
+  const debouncedSearch = useDebounce(search, 300);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['tasks', search, statusFilter, priorityFilter, page],
+    queryKey: ['tasks', debouncedSearch, statusFilter, priorityFilter, page],
     queryFn: () =>
       tasksApi.list({
-        search: search || undefined,
+        search: debouncedSearch || undefined,
         status: statusFilter === 'all' ? undefined : statusFilter,
         priority: priorityFilter === 'all' ? undefined : priorityFilter,
         page,
@@ -99,20 +102,26 @@ function TasksContent() {
   const meta = data?.meta || { page: 1, limit: 15, total: 0, totalPages: 1 };
 
   // Calculate distribution metrics for circular charts
-  const totalCount = meta.total || tasks.length;
-  const completedCount = tasks.filter((t) => t.status === 'Completed').length;
-  const inProgressCount = tasks.filter((t) => t.status === 'In Progress').length;
-  const pendingCount = tasks.filter((t) => t.status === 'Pending').length;
+  const metrics = useMemo(() => {
+    const totalCount = meta.total || tasks.length;
+    const completedCount = tasks.filter((t) => t.status === 'Completed').length;
+    const inProgressCount = tasks.filter((t) => t.status === 'In Progress').length;
+    const pendingCount = tasks.filter((t) => t.status === 'Pending').length;
 
-  const highPriority = tasks.filter((t) => t.priority === 'High').length;
-  const medPriority = tasks.filter((t) => t.priority === 'Medium').length;
-  const lowPriority = tasks.filter((t) => t.priority === 'Low').length;
+    const highPriority = tasks.filter((t) => t.priority === 'High').length;
+    const medPriority = tasks.filter((t) => t.priority === 'Medium').length;
+    const lowPriority = tasks.filter((t) => t.priority === 'Low').length;
 
-  const prioritySegments = [
-    { label: 'High', value: highPriority, color: '#EF4444', percentage: tasks.length ? Math.round((highPriority / tasks.length) * 100) : 35 },
-    { label: 'Medium', value: medPriority, color: '#F59E0B', percentage: tasks.length ? Math.round((medPriority / tasks.length) * 100) : 45 },
-    { label: 'Low', value: lowPriority, color: '#3B82F6', percentage: tasks.length ? Math.round((lowPriority / tasks.length) * 100) : 20 },
-  ];
+    const prioritySegments = [
+      { label: 'High', value: highPriority, color: '#EF4444', percentage: tasks.length ? Math.round((highPriority / tasks.length) * 100) : 35 },
+      { label: 'Medium', value: medPriority, color: '#F59E0B', percentage: tasks.length ? Math.round((medPriority / tasks.length) * 100) : 45 },
+      { label: 'Low', value: lowPriority, color: '#3B82F6', percentage: tasks.length ? Math.round((lowPriority / tasks.length) * 100) : 20 },
+    ];
+
+    return { totalCount, completedCount, inProgressCount, pendingCount, highPriority, medPriority, lowPriority, prioritySegments };
+  }, [tasks, meta.total]);
+
+  const { completedCount, inProgressCount, pendingCount, highPriority, medPriority, lowPriority, prioritySegments } = metrics;
 
   const createMutation = useMutation({
     mutationFn: (input: CreateTaskInput) => tasksApi.create(input),
@@ -125,7 +134,25 @@ function TasksContent() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTaskInput }) => tasksApi.update(id, data),
-    onSuccess: () => {
+    onMutate: async ({ id, data }) => {
+      const queryKey = ['tasks', debouncedSearch, statusFilter, priorityFilter, page];
+      await queryClient.cancelQueries({ queryKey });
+      const previousTasks = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old || !old.data) return old;
+        return {
+          ...old,
+          data: old.data.map((t: any) => (t.id === id ? { ...t, ...data } : t)),
+        };
+      });
+      return { previousTasks, queryKey };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(context.queryKey, context.previousTasks);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });

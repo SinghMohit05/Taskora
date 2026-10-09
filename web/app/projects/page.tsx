@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AppShell from '@/components/app-shell';
+import { useDebounce } from '@/hooks/use-debounce';
 import ProjectModal from '@/components/modals/project-modal';
 import ConfirmModal from '@/components/modals/confirm-modal';
 import { projectsApi } from '@/lib/api';
@@ -82,11 +83,13 @@ export default function ProjectsPage() {
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
+  const debouncedSearch = useDebounce(search, 300);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['projects', search, statusFilter, page],
+    queryKey: ['projects', debouncedSearch, statusFilter, page],
     queryFn: () =>
       projectsApi.list({
-        search: search || undefined,
+        search: debouncedSearch || undefined,
         status: statusFilter === 'all' ? undefined : statusFilter,
         page,
         limit: 12,

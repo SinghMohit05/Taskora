@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -35,61 +35,63 @@ export function ProjectOverviewChart({ tasks, projects }: ProjectOverviewChartPr
   const [timeRange, setTimeRange] = useState<'Last 6 months' | 'By Project'>('Last 6 months');
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Generate the last 6 months labels
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const now = new Date();
-  const monthsData: MonthDataPoint[] = [];
+  const monthChartData = useMemo(() => {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const now = new Date();
+    const monthsData: MonthDataPoint[] = [];
 
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const mName = monthNames[d.getMonth()];
-    monthsData.push({
-      month: mName,
-      monthIndex: d.getMonth(),
-      year: d.getFullYear(),
-      completed: 0,
-      inProgress: 0,
-      pending: 0,
-    });
-  }
-
-  // Aggregate real task data into month slots using dueDate or createdAt
-  tasks.forEach((task) => {
-    const taskDate = task.dueDate ? new Date(task.dueDate) : task.createdAt ? new Date(task.createdAt) : now;
-    const taskMonth = taskDate.getMonth();
-    const slot = monthsData.find((m) => m.monthIndex === taskMonth);
-
-    if (slot) {
-      if (task.status === 'Completed') slot.completed += 1;
-      else if (task.status === 'In Progress') slot.inProgress += 1;
-      else slot.pending += 1;
-    } else {
-      const latest = monthsData[monthsData.length - 1];
-      if (task.status === 'Completed') latest.completed += 1;
-      else if (task.status === 'In Progress') latest.inProgress += 1;
-      else latest.pending += 1;
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mName = monthNames[d.getMonth()];
+      monthsData.push({
+        month: mName,
+        monthIndex: d.getMonth(),
+        year: d.getFullYear(),
+        completed: 0,
+        inProgress: 0,
+        pending: 0,
+      });
     }
-  });
 
-  const monthChartData = monthsData.map((item) => ({
-    name: item.month,
-    completed: item.completed,
-    inProgress: item.inProgress,
-    pending: item.pending,
-  }));
+    tasks.forEach((task) => {
+      const taskDate = task.dueDate ? new Date(task.dueDate) : task.createdAt ? new Date(task.createdAt) : now;
+      const taskMonth = taskDate.getMonth();
+      const slot = monthsData.find((m) => m.monthIndex === taskMonth);
 
-  const projectChartData = projects.slice(0, 6).map((proj) => {
-    const projTasks = tasks.filter((t) => t.projectId === proj.id);
-    const completed = projTasks.filter((t) => t.status === 'Completed').length;
-    const inProgress = projTasks.filter((t) => t.status === 'In Progress').length;
-    const pending = projTasks.filter((t) => t.status === 'Pending').length;
-    return {
-      name: proj.name.length > 14 ? proj.name.slice(0, 12) + '...' : proj.name,
-      completed,
-      inProgress,
-      pending,
-    };
-  });
+      if (slot) {
+        if (task.status === 'Completed') slot.completed += 1;
+        else if (task.status === 'In Progress') slot.inProgress += 1;
+        else slot.pending += 1;
+      } else {
+        const latest = monthsData[monthsData.length - 1];
+        if (task.status === 'Completed') latest.completed += 1;
+        else if (task.status === 'In Progress') latest.inProgress += 1;
+        else latest.pending += 1;
+      }
+    });
+
+    return monthsData.map((item) => ({
+      name: item.month,
+      completed: item.completed,
+      inProgress: item.inProgress,
+      pending: item.pending,
+    }));
+  }, [tasks]);
+
+  const projectChartData = useMemo(() => {
+    return projects.slice(0, 6).map((proj) => {
+      const projTasks = tasks.filter((t) => t.projectId === proj.id);
+      const completed = projTasks.filter((t) => t.status === 'Completed').length;
+      const inProgress = projTasks.filter((t) => t.status === 'In Progress').length;
+      const pending = projTasks.filter((t) => t.status === 'Pending').length;
+      return {
+        name: proj.name.length > 14 ? proj.name.slice(0, 12) + '...' : proj.name,
+        completed,
+        inProgress,
+        pending,
+      };
+    });
+  }, [tasks, projects]);
 
   const activeData = timeRange === 'Last 6 months' ? monthChartData : projectChartData;
 
@@ -222,20 +224,23 @@ interface TasksByPriorityChartProps {
 }
 
 export function TasksByPriorityChart({ tasks, totalTasks }: TasksByPriorityChartProps) {
-  const highCount = tasks.filter((t) => t.priority === 'High').length;
-  const mediumCount = tasks.filter((t) => t.priority === 'Medium').length;
-  const lowCount = tasks.filter((t) => t.priority === 'Low').length;
+  const { highCount, mediumCount, lowCount, total, highPct, mediumPct, lowPct, data } = useMemo(() => {
+    const high = tasks.filter((t) => t.priority === 'High').length;
+    const medium = tasks.filter((t) => t.priority === 'Medium').length;
+    const low = tasks.filter((t) => t.priority === 'Low').length;
 
-  const total = totalTasks || tasks.length;
-  const highPct = total > 0 ? Math.round((highCount / total) * 100) : 0;
-  const mediumPct = total > 0 ? Math.round((mediumCount / total) * 100) : 0;
-  const lowPct = total > 0 ? Math.max(0, 100 - highPct - mediumPct) : 0;
+    const tot = totalTasks || tasks.length;
+    const hPct = tot > 0 ? Math.round((high / tot) * 100) : 0;
+    const mPct = tot > 0 ? Math.round((medium / tot) * 100) : 0;
+    const lPct = tot > 0 ? Math.max(0, 100 - hPct - mPct) : 0;
 
-  const data = [
-    { name: 'High', value: highCount || (total === 0 ? 1 : 0), color: '#EF4444' },
-    { name: 'Medium', value: mediumCount || (total === 0 ? 1 : 0), color: '#F59E0B' },
-    { name: 'Low', value: lowCount || (total === 0 ? 1 : 0), color: '#3B82F6' },
-  ];
+    const d = [
+      { name: 'High', value: high || (tot === 0 ? 1 : 0), color: '#EF4444' },
+      { name: 'Medium', value: medium || (tot === 0 ? 1 : 0), color: '#F59E0B' },
+      { name: 'Low', value: low || (tot === 0 ? 1 : 0), color: '#3B82F6' },
+    ];
+    return { highCount: high, mediumCount: medium, lowCount: low, total: tot, highPct: hPct, mediumPct: mPct, lowPct: lPct, data: d };
+  }, [tasks, totalTasks]);
 
   return (
     <div className="bg-[#121622] rounded-2xl p-6 border border-white/[0.06] shadow-sm flex flex-col justify-between h-full">

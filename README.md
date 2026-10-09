@@ -261,8 +261,7 @@ npm run build:all
 ## Download Android App
 
 You can download the latest Android APK for Taskora directly using the link below:
-
-🔗 **[Download Taskora APK](https://expo.dev/accounts/singhmohit05/projects/taskora/builds)**
+🔗 **[Download Taskora APK](https://expo.dev/accounts/singhmohit05/projects/taskora/builds/89265d35-d61a-4118-8ceb-48680a8a940e)**
 
 *(Note: Ensure that your device is allowed to install apps from unknown sources if downloading the APK directly).*
 
